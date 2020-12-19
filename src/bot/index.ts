@@ -1,13 +1,16 @@
 import { HelixUser } from "twitch/lib";
 import Ban from "../data/Ban";
 import User, { IUser } from "../data/User";
+import Moderator from "../moderator";
 import { Channel } from "./Channel";
 
 export class Bot {
   channels: Channel[] = [];
+  moderator: Moderator;
 
   constructor() {
     this.addExistingUsers();
+    this.moderator = new Moderator();
   }
 
   async addExistingUsers() {
@@ -26,7 +29,7 @@ export class Bot {
       await existing_channel.close();
     }
 
-    const channel = new Channel(user);
+    const channel = new Channel(user, this.moderator);
     channel.on(
       "new_ban",
       (ban_details: { user: HelixUser; channel: string; reason: string }) =>

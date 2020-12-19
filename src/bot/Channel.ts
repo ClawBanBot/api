@@ -3,19 +3,19 @@ import { IUser } from "../data/User";
 import { EventEmitter } from "events";
 import { ChatUserstate, Client } from "tmi.js";
 import config from "../config";
+import Moderator from "../moderator";
 
-import { ContentModeratorClient } from "@azure/cognitiveservices-contentmoderator";
-import { CognitiveServicesCredentials } from "@azure/ms-rest-azure-js";
-
+// TODO Add a better logger
+// TODO Break this down if we can
 export class Channel extends EventEmitter {
   private user: IUser;
   private authProvider: StaticAuthProvider;
   private api: ApiClient;
   private chat: Client;
   private banList: HelixUser[] = [];
-  private cognitive_client: ContentModeratorClient;
+  private moderator: Moderator;
 
-  constructor(user: IUser) {
+  constructor(user: IUser, moderator: Moderator) {
     super();
     this.user = user;
     this.authProvider = new StaticAuthProvider(
@@ -23,17 +23,7 @@ export class Channel extends EventEmitter {
       user.access_token
     );
     this.api = new ApiClient({ authProvider: this.authProvider });
-
-    const contentModeratorKey = process.env.CONTENT_MODERATOR_KEY;
-    const contentModeratorEndPoint = process.env.CONTENT_MODERATOR_ENDPOINT;
-
-    const cognitiveServiceCredentials = new CognitiveServicesCredentials(
-      contentModeratorKey
-    );
-    this.cognitive_client = new ContentModeratorClient(
-      cognitiveServiceCredentials,
-      contentModeratorEndPoint
-    );
+    this.moderator = moderator;
   }
 
   public async loadBanList() {
@@ -55,7 +45,7 @@ export class Channel extends EventEmitter {
         });
       }
     } catch (e) {
-      console.log("Error loading ban list: ", e);
+      console.error("Error loading ban list: ", e);
     }
   }
 
@@ -110,22 +100,23 @@ export class Channel extends EventEmitter {
             // Run the tool, get the score!
             return;
 
-          const result = await this.cognitive_client.textModeration.screenText(
-            "text/plain",
-            message,
-            { classify: true }
-          );
-          console.log(message, result);
+          const result = await this.moderator.checkMessage(message);
+          if (result.reviewRecommended) {
+            console.log(
+              `WOULD BAN ${userstate["display-name"]} FOR THE FOLLOWING MESSAGE:\n===`
+            );
+            console.log(message);
+            console.log("===\nTHE SCORES WERE:", result);
+          }
         }
       );
       await this.chat.connect();
     } catch (e) {
-      console.log("ERR", e);
+      console.error("ERR", e);
     }
   }
 
   private async channelBan(username: string, reason: string) {
-    console.log(reason);
     const user = await this.api.helix.users.getUserByName(username);
     this.emit("new_ban", { user, channel: this.user.twitch_name, reason });
     console.log(

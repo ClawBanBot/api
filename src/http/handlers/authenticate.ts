@@ -6,6 +6,7 @@ import { IConfig } from "../../config";
 import * as jwt from "jsonwebtoken";
 import User from "../../data/User";
 
+// TODO Break this into functions
 export default async (req: Request, res: Response) => {
   try {
     const response = await Axios.post(
