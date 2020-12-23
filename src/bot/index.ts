@@ -89,4 +89,9 @@ export class Bot {
       }
     });
   }
+
+  async remove_ban(twitch_id: string) {
+    console.log(`Removing ban for ${twitch_id} on ALL channels`);
+    this.channels.forEach((chan) => chan.removeBan(twitch_id));
+  }
 }

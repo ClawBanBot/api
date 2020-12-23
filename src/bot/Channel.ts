@@ -193,4 +193,11 @@ export class Channel extends EventEmitter {
   public async addBanById(userId: string, reason: string) {
     this.addBan(await this.api.helix.users.getUserById(userId), reason);
   }
+
+  public async removeBan(username: string) {
+    console.log(
+      `Removing ban for ${username} on channel ${this.user.twitch_name}`
+    );
+    this.chat.unban(this.user.twitch_name, username);
+  }
 }
