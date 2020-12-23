@@ -30,6 +30,7 @@ export class Bot {
     }
 
     const channel = new Channel(user, this.moderator);
+    await channel.authenticate();
     channel.on(
       "new_ban",
       (ban_details: { user: HelixUser; channel: string; reason: string }) =>

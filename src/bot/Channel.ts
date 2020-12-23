@@ -4,6 +4,8 @@ import { EventEmitter } from "events";
 import { ChatUserstate, Client } from "tmi.js";
 import config from "../config";
 import Moderator from "../moderator";
+import { DateTime } from "luxon";
+import Axios from "axios";
 
 // TODO Add a better logger
 // TODO Break this down if we can
@@ -14,16 +16,50 @@ export class Channel extends EventEmitter {
   private chat: Client;
   private banList: HelixUser[] = [];
   private moderator: Moderator;
+  private refresh_timeout: any;
 
   constructor(user: IUser, moderator: Moderator) {
     super();
     this.user = user;
+    this.moderator = moderator;
+  }
+
+  public async authenticate() {
+    console.log(`Refreshing tokens for ${this.user.twitch_name}`);
+
+    if (this.refresh_timeout) {
+      clearTimeout(this.refresh_timeout);
+    }
+
+    const response = await Axios.post(
+      "https://id.twitch.tv/oauth2/token",
+      {},
+      {
+        params: {
+          grant_type: "refresh_token",
+          refresh_token: this.user.refresh_token,
+          client_id: process.env.TWITCH_CLIENT_ID,
+          client_secret: process.env.TWITCH_CLIENT_SECRET,
+        },
+      }
+    );
+    const { access_token, expires_in, refresh_token } = response.data;
+    this.user.access_token = access_token;
+    this.user.refresh_token = refresh_token;
+    this.user.next_refresh = DateTime.local()
+      .plus({ seconds: Math.min(3600, expires_in) })
+      .toISO();
+    this.user.save();
+    this.refresh_timeout = setTimeout(
+      () => this.authenticate(),
+      Math.min(3600, expires_in) * 1000
+    );
+
     this.authProvider = new StaticAuthProvider(
       process.env.TWITCH_CLIENT_ID,
-      user.access_token
+      this.user.access_token
     );
     this.api = new ApiClient({ authProvider: this.authProvider });
-    this.moderator = moderator;
   }
 
   public async loadBanList() {
@@ -60,6 +96,9 @@ export class Channel extends EventEmitter {
   async close() {
     if (this.chat.readyState() === "OPEN") {
       await this.chat.disconnect();
+    }
+    if (this.refresh_timeout) {
+      clearTimeout(this.refresh_timeout);
     }
   }
 
