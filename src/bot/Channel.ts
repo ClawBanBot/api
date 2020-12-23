@@ -6,6 +6,7 @@ import config from "../config";
 import Moderator from "../moderator";
 import { DateTime } from "luxon";
 import Axios from "axios";
+import Ban from "../data/Ban";
 
 // TODO Add a better logger
 // TODO Break this down if we can
@@ -130,11 +131,12 @@ export class Channel extends EventEmitter {
           self: boolean
         ) => {
           if (
-            self || // Streamer messages should be ignored. They can say what they want in their own stream
-            (config.enable_allow_list &&
-              config.allow_list.includes(
-                userstate["display-name"].toLowerCase()
-              )) // Don't ban people in the allow list
+            self
+            // self || // Streamer messages should be ignored. They can say what they want in their own stream
+            // (config.enable_allow_list &&
+            //   config.allow_list.includes(
+            //     userstate["display-name"].toLowerCase()
+            //   )) // Don't ban people in the allow list
           )
             // Run the tool, get the score!
             return;
@@ -146,6 +148,20 @@ export class Channel extends EventEmitter {
             );
             console.log(message);
             console.log("===\nTHE SCORES WERE:", result);
+            const ban = new Ban({
+              twitch_id: userstate["user-id"],
+              twitch_name: userstate.username,
+              channel,
+              reason: "THE CLAW DID BAN",
+              expires_at: "never",
+              scores: {
+                category1: result.category1.score,
+                category2: result.category2.score,
+                category3: result.category3.score,
+              },
+              message: message,
+            });
+            ban.save();
           }
         }
       );
@@ -167,7 +183,7 @@ export class Channel extends EventEmitter {
     // Add a ban for the user if we haven't already banned them
     if (!this.banList.find((existing_ban) => existing_ban.id === user.id)) {
       try {
-        await this.chat.ban(this.user.twitch_name, user.displayName, reason);
+        // await this.chat.ban(this.user.twitch_name, user.displayName, reason);
       } catch (e) {
         console.log(`ADDING BAN FAILED!!!! 😭 ${user.displayName}`);
       }

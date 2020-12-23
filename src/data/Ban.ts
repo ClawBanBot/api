@@ -6,6 +6,8 @@ export interface IBan extends Document {
   channel: string;
   reason: string;
   expires_at: string;
+  scores?: { category1: number; category2: number; category3: number };
+  message?: string;
 }
 
 const BanSchema: Schema = new Schema({
@@ -14,6 +16,12 @@ const BanSchema: Schema = new Schema({
   channel: { type: String, required: true },
   reason: { type: String, required: true },
   expires_at: { type: String, required: true },
+  scores: {
+    category1: { type: Number, required: false },
+    category2: { type: Number, required: false },
+    category3: { type: Number, required: false },
+  },
+  message: { type: String, required: false },
 });
 
 const Ban: Model<IBan> = model("Ban", BanSchema);
