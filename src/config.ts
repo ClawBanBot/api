@@ -4,10 +4,11 @@ export interface IConfig {
   admins: string[];
 }
 
+//TODO: store in DB
 const config = {
   enable_allow_list: true,
-  allow_list: ["MadhouseSteve"],
-  admins: ["MadhouseSteve"],
+  allow_list: ["MadhouseSteve", "whitep4nth3r"],
+  admins: ["MadhouseSteve", "whitep4nth3r"],
 };
 
 if (config.allow_list) {

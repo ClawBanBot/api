@@ -1,7 +1,5 @@
 # Welcome to the Claw Ban Bot
 
-
-
 ## Getting started with development
 
 ## Claw Ban Bot Front-End
@@ -10,7 +8,7 @@ This respository is designed to work in parallel with the [Claw Ban Bot Front-En
 
 ## Pre requisites
 
-```
+```text
 yarn OR npm
 Docker
 ```
@@ -29,17 +27,16 @@ The Content Moderator Key and Content Moderator Endpoint are from Azure, given t
 
 After ensuring you have the pre-requisites downloaded and your .env file created with the values added, it is time to run the API! We assume yarn here but change to npm if that is your tool of choice.
 
-```
+```bash
 yarn install
 ```
 
 This grabs the dependencies as listed in the package.json file.
 
-```
+```bash
 docker-compose up
 ```
 
 This spins up the Docker containing with all the API running inside. Voila!
 
 *Note: This will only spin up the backend so you will not have any sites running. This is where the front-end project comes in.
- 
