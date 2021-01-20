@@ -4,6 +4,10 @@ import User, { IUser } from "../data/User";
 import Moderator from "../moderator";
 import { Channel } from "./Channel";
 
+interface IUserToken {
+  sub: string;
+}
+
 export class Bot {
   channels: Channel[] = [];
   moderator: Moderator;
@@ -93,5 +97,15 @@ export class Bot {
   async remove_ban(twitch_id: string) {
     console.log(`Removing ban for ${twitch_id} on ALL channels`);
     this.channels.forEach((chan) => chan.removeBan(twitch_id));
+  }
+
+  async remove_user(user: IUserToken) {
+    const existing_channel = this.channels.find(
+      (chan) => user.sub === chan.getChannelId()
+    );
+    if (existing_channel) {
+      await existing_channel.close();
+    }
+    await User.deleteOne({ twitch_id: user.sub }).exec();
   }
 }

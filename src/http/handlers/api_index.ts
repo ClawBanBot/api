@@ -28,5 +28,12 @@ export default (_req: Request, res: Response) => {
         parameters: {},
       },
     },
+    "/logout": {
+      get: {
+        description: "Disconnects the current users bot",
+        body: {},
+        parameters: {},
+      },
+    },
   });
 };
